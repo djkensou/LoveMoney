@@ -579,7 +579,7 @@
     <input type="text" class="nota-input" id="notaInput" placeholder="Nota (opcional)" />
   </div>
 
-  <!-- Modal Ajustar -->
+  <!-- Modal Ajustar (sin cambios) -->
   <div class="modal" id="modalAjustar">
     <div class="modal-header">
       <button class="btn-cerrar" onclick="cerrarAjustar()">Cancelar</button>
@@ -612,7 +612,7 @@
   <!-- Modal Historial -->
   <div class="modal" id="modalHistorial">
     <div class="modal-header">
-      <button class="btn-cerrar" onclick="cerrarHistorial()">Cerrar</button>
+      <button class="btn-cerrar" onclick="cerrarHistorial()">Inicio</button>
       <h2>Historial</h2>
       <div style="width:60px"></div>
     </div>
@@ -622,7 +622,7 @@
   <!-- Modal Gráfico -->
   <div class="modal" id="modalGrafico">
     <div class="modal-header">
-      <button class="btn-cerrar" onclick="cerrarGrafico()">Cerrar</button>
+      <button class="btn-cerrar" onclick="cerrarGrafico()">Inicio</button>
       <h2 id="tituloGrafico">Mes en curso</h2>
       <div style="width:60px"></div>
     </div>
@@ -895,7 +895,6 @@
       guardarDatos();
       cerrarActionSheet();
       renderDashboard();
-      // Si el historial está abierto, actualizarlo también
       if (document.getElementById("modalHistorial").classList.contains("active")) {
         renderHistorial();
       }
@@ -976,7 +975,6 @@
       URL.revokeObjectURL(url);
     }
 
-    // ========== HISTORIAL ==========
     function abrirHistorial() {
       renderHistorial();
       document.getElementById("modalHistorial").classList.add("active");
@@ -1007,7 +1005,6 @@
       `).join("");
     }
 
-    // ========== GRÁFICO ==========
     function abrirGrafico(tipo) {
       const ahora = new Date();
       let mes, año, titulo;
