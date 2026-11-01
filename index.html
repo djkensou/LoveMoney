@@ -112,10 +112,24 @@
       font-weight: 600;
     }
 
-    .section-title {
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       padding: 8px 20px 12px;
+    }
+
+    .section-title {
       font-size: 15px;
       color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .btn-historial {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 15px;
       font-weight: 500;
     }
 
@@ -424,7 +438,6 @@
       margin-top: 4px;
     }
 
-    /* Gráfico de torta */
     .chart-container {
       padding: 20px;
       text-align: center;
@@ -478,6 +491,10 @@
       min-width: 40px;
       text-align: right;
     }
+
+    .historial-lista {
+      padding: 0 20px 40px;
+    }
   </style>
 </head>
 <body>
@@ -529,7 +546,10 @@
       </div>
     </div>
 
-    <div class="section-title">Últimos movimientos</div>
+    <div class="section-header">
+      <div class="section-title">Últimos movimientos</div>
+      <button class="btn-historial" onclick="abrirHistorial()">Ver todos</button>
+    </div>
     <div class="movimientos" id="listaMovimientos"></div>
   </div>
 
@@ -556,7 +576,6 @@
     <button class="btn-volver" onclick="cerrarAgregar()">Volver sin cambios</button>
 
     <div class="categorias" id="categoriasContainer"></div>
-
     <input type="text" class="nota-input" id="notaInput" placeholder="Nota (opcional)" />
   </div>
 
@@ -588,6 +607,16 @@
 
       <p class="ajustar-nota">Esto solo corrige el saldo.<br>No crea un movimiento.</p>
     </div>
+  </div>
+
+  <!-- Modal Historial -->
+  <div class="modal" id="modalHistorial">
+    <div class="modal-header">
+      <button class="btn-cerrar" onclick="cerrarHistorial()">Cerrar</button>
+      <h2>Historial</h2>
+      <div style="width:60px"></div>
+    </div>
+    <div class="historial-lista" id="listaHistorial"></div>
   </div>
 
   <!-- Modal Gráfico -->
@@ -718,7 +747,7 @@
       elBalAnterior.className = "valor " + (balAnterior >= 0 ? "verde" : "rojo");
 
       const lista = document.getElementById("listaMovimientos");
-      const ultimos = [...movimientos].reverse().slice(0, 12);
+      const ultimos = [...movimientos].reverse().slice(0, 8);
 
       if (ultimos.length === 0) {
         lista.innerHTML = `<div class="empty">No hay movimientos aún</div>`;
@@ -866,6 +895,10 @@
       guardarDatos();
       cerrarActionSheet();
       renderDashboard();
+      // Si el historial está abierto, actualizarlo también
+      if (document.getElementById("modalHistorial").classList.contains("active")) {
+        renderHistorial();
+      }
     }
 
     function abrirAjustar() {
@@ -943,7 +976,38 @@
       URL.revokeObjectURL(url);
     }
 
-    // ========== GRÁFICO DE TORTA ==========
+    // ========== HISTORIAL ==========
+    function abrirHistorial() {
+      renderHistorial();
+      document.getElementById("modalHistorial").classList.add("active");
+    }
+
+    function cerrarHistorial() {
+      document.getElementById("modalHistorial").classList.remove("active");
+    }
+
+    function renderHistorial() {
+      const lista = document.getElementById("listaHistorial");
+      const todos = [...movimientos].reverse();
+
+      if (todos.length === 0) {
+        lista.innerHTML = `<div class="empty">No hay movimientos</div>`;
+        return;
+      }
+
+      lista.innerHTML = todos.map(m => `
+        <div class="mov" onclick="abrirEliminar('${m.id}')">
+          <div class="mov-emoji">${m.emoji}</div>
+          <div class="mov-info">
+            <div class="mov-cat">${m.categoria}</div>
+            <div class="mov-fecha">${formatFecha(m.fecha)}${m.nota ? " · " + m.nota : ""}</div>
+          </div>
+          <div class="mov-monto ${m.tipo}">${m.tipo === "ingreso" ? "+" : "-"}${formatCLP(m.monto)}</div>
+        </div>
+      `).join("");
+    }
+
+    // ========== GRÁFICO ==========
     function abrirGrafico(tipo) {
       const ahora = new Date();
       let mes, año, titulo;
@@ -961,7 +1025,6 @@
 
       document.getElementById("tituloGrafico").textContent = titulo;
 
-      // Calcular gastos por categoría
       const porCategoria = {};
       let total = 0;
 
@@ -986,11 +1049,8 @@
         .sort((a, b) => b.monto - a.monto);
 
       document.getElementById("chartTotal").textContent = formatCLP(total);
-
-      // Dibujar torta
       dibujarTorta(datos, total);
 
-      // Lista
       const lista = document.getElementById("chartList");
       if (datos.length === 0) {
         lista.innerHTML = `<div class="empty">No hay gastos este mes</div>`;
@@ -1042,7 +1102,6 @@
         startAngle += sliceAngle;
       });
 
-      // Círculo interior (donut)
       ctx.beginPath();
       ctx.arc(cx, cy, 55, 0, Math.PI * 2);
       ctx.fillStyle = "#000000";
