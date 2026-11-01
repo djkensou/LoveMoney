@@ -85,6 +85,7 @@
       background: var(--card);
       border-radius: 16px;
       padding: 16px;
+      cursor: pointer;
     }
 
     .mes-card h3 {
@@ -256,7 +257,7 @@
     .monto-input::placeholder { color: var(--text-secondary); }
 
     .btn-guardar {
-      margin: 8px 20px 20px;
+      margin: 8px 20px 12px;
       background: var(--accent);
       color: white;
       border: none;
@@ -271,6 +272,18 @@
       opacity: 0.4;
     }
 
+    .btn-volver {
+      margin: 0 20px 20px;
+      background: var(--card);
+      color: var(--text);
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 600;
+      width: calc(100% - 40px);
+    }
+
     .categorias {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -282,11 +295,11 @@
       background: var(--card);
       border: 2px solid transparent;
       border-radius: 14px;
-      padding: 14px 8px;
+      padding: 16px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       color: var(--text);
       font-size: 13px;
       font-weight: 500;
@@ -297,7 +310,7 @@
       background: rgba(10, 132, 255, 0.12);
     }
 
-    .cat-btn .emoji { font-size: 28px; }
+    .cat-btn .emoji { font-size: 30px; }
 
     .nota-input {
       margin: 0 20px 20px;
@@ -410,6 +423,61 @@
       background: var(--border);
       margin-top: 4px;
     }
+
+    /* Gráfico de torta */
+    .chart-container {
+      padding: 20px;
+      text-align: center;
+    }
+
+    #pieCanvas {
+      max-width: 280px;
+      margin: 0 auto 24px;
+    }
+
+    .chart-total {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .chart-list {
+      text-align: left;
+      padding: 0 10px;
+    }
+
+    .chart-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+    }
+
+    .chart-item:last-child { border-bottom: none; }
+
+    .chart-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 12px;
+    }
+
+    .chart-name {
+      flex: 1;
+    }
+
+    .chart-monto {
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    .chart-pct {
+      color: var(--text-secondary);
+      font-size: 13px;
+      min-width: 40px;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -428,7 +496,7 @@
     </div>
 
     <div class="meses">
-      <div class="mes-card">
+      <div class="mes-card" onclick="abrirGrafico('actual')">
         <h3>Mes en curso</h3>
         <div class="mes-row">
           <span class="label">Ingresos</span>
@@ -444,7 +512,7 @@
         </div>
       </div>
 
-      <div class="mes-card">
+      <div class="mes-card" onclick="abrirGrafico('anterior')">
         <h3>Mes anterior</h3>
         <div class="mes-row">
           <span class="label">Ingresos</span>
@@ -467,6 +535,7 @@
 
   <button class="fab" onclick="abrirAgregar()">+</button>
 
+  <!-- Modal Agregar -->
   <div class="modal" id="modalAgregar">
     <div class="modal-header">
       <button class="btn-cerrar" onclick="cerrarAgregar()">Cancelar</button>
@@ -484,12 +553,14 @@
     </div>
 
     <button class="btn-guardar" id="btnGuardar" onclick="guardarMovimiento()" disabled>Guardar</button>
+    <button class="btn-volver" onclick="cerrarAgregar()">Volver sin cambios</button>
 
     <div class="categorias" id="categoriasContainer"></div>
 
     <input type="text" class="nota-input" id="notaInput" placeholder="Nota (opcional)" />
   </div>
 
+  <!-- Modal Ajustar -->
   <div class="modal" id="modalAjustar">
     <div class="modal-header">
       <button class="btn-cerrar" onclick="cerrarAjustar()">Cancelar</button>
@@ -504,16 +575,14 @@
       <input type="text" class="ajustar-input" id="nuevoSaldoInput" placeholder="Nuevo saldo" inputmode="numeric" autocomplete="off" />
 
       <button class="btn-guardar" onclick="guardarNuevoSaldo()">Actualizar saldo</button>
+      <button class="btn-volver" onclick="cerrarAjustar()">Volver sin cambios</button>
 
-      <button class="btn-guardar" onclick="cerrarAjustar()" style="background: var(--card); color: var(--text); margin-top: 12px;">Volver sin cambios</button>
-
-      <!-- Toggle sonido -->
       <div style="margin-top: 28px; display: flex; align-items: center; justify-content: space-between; background: var(--card); padding: 14px 16px; border-radius: 12px;">
         <span style="font-size: 15px;">Sonido al registrar ingreso</span>
         <label style="position: relative; display: inline-block; width: 51px; height: 31px;">
           <input type="checkbox" id="toggleSonido" onchange="cambiarSonido()" style="opacity: 0; width: 0; height: 0;">
           <span id="sliderSonido" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #34C759; transition: .3s; border-radius: 31px;"></span>
-          <span id="sliderCircle" style="position: absolute; content: ''; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+          <span id="sliderCircle" style="position: absolute; height: 27px; width: 27px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%;"></span>
         </label>
       </div>
 
@@ -521,6 +590,21 @@
     </div>
   </div>
 
+  <!-- Modal Gráfico -->
+  <div class="modal" id="modalGrafico">
+    <div class="modal-header">
+      <button class="btn-cerrar" onclick="cerrarGrafico()">Cerrar</button>
+      <h2 id="tituloGrafico">Mes en curso</h2>
+      <div style="width:60px"></div>
+    </div>
+    <div class="chart-container">
+      <canvas id="pieCanvas" width="280" height="280"></canvas>
+      <div class="chart-total" id="chartTotal">$0</div>
+      <div class="chart-list" id="chartList"></div>
+    </div>
+  </div>
+
+  <!-- Action sheet eliminar -->
   <div class="action-sheet-overlay" id="actionSheet">
     <div class="action-sheet">
       <div class="action-sheet-title" id="actionTitle">¿Eliminar este movimiento?</div>
@@ -538,13 +622,15 @@
       { emoji: "🚇", nombre: "Metro" },
       { emoji: "🚌", nombre: "Bus" },
       { emoji: "🚗", nombre: "Uber" },
-      { emoji: "✈️", nombre: "Avión" },
+      { emoji: "✈️", nombre: "Viajes" },
+      { emoji: "🏨", nombre: "Hotel" },
+      { emoji: "⛽", nombre: "Combustible" },
       { emoji: "👕", nombre: "Ropa / Zapatillas" },
       { emoji: "💇", nombre: "Belleza" },
       { emoji: "🏥", nombre: "Salud / Médico" },
       { emoji: "📚", nombre: "Educación" },
       { emoji: "🐶", nombre: "Mascotas" },
-      { emoji: "🎬", nombre: "Cine" },
+      { emoji: "🎬", nombre: "Cine / Diversión" },
       { emoji: "🎁", nombre: "Regalos" },
       { emoji: "🏋️", nombre: "Gym" },
       { emoji: "📱", nombre: "Suscripciones" },
@@ -555,7 +641,14 @@
 
     const INGRESOS = [
       { emoji: "💼", nombre: "Sueldo" },
-      { emoji: "💰", nombre: "Otros ingresos" }
+      { emoji: "💰", nombre: "Otros ingresos" },
+      { emoji: "📈", nombre: "Inversiones" }
+    ];
+
+    const COLORES = [
+      "#0A84FF", "#30D158", "#FF9F0A", "#FF453A", "#BF5AF2",
+      "#64D2FF", "#FF375F", "#AC8E68", "#FFD60A", "#5E5CE6",
+      "#32D74B", "#FF6482", "#64D2FF", "#FF9F0A", "#BF5AF2"
     ];
 
     let movimientos = [];
@@ -603,7 +696,6 @@
       const ahora = new Date();
       const mesActual = ahora.getMonth();
       const añoActual = ahora.getFullYear();
-
       const mesAnteriorDate = new Date(añoActual, mesActual - 1, 1);
       const mesAnterior = mesAnteriorDate.getMonth();
       const añoAnterior = mesAnteriorDate.getFullYear();
@@ -753,7 +845,6 @@
     function abrirEliminar(id) {
       movimientoAEliminar = movimientos.find(m => m.id === id);
       if (!movimientoAEliminar) return;
-
       document.getElementById("actionTitle").textContent = 
         `¿Eliminar ${movimientoAEliminar.categoria} de ${formatCLP(movimientoAEliminar.monto)}?`;
       document.getElementById("actionSheet").classList.add("active");
@@ -766,13 +857,11 @@
 
     function confirmarEliminar() {
       if (!movimientoAEliminar) return;
-
       if (movimientoAEliminar.tipo === "ingreso") {
         saldo -= movimientoAEliminar.monto;
       } else {
         saldo += movimientoAEliminar.monto;
       }
-
       movimientos = movimientos.filter(m => m.id !== movimientoAEliminar.id);
       guardarDatos();
       cerrarActionSheet();
@@ -783,7 +872,6 @@
       document.getElementById("ajustarSaldoActual").textContent = formatCLP(saldo);
       document.getElementById("nuevoSaldoInput").value = "";
       
-      // Sincronizar el toggle del sonido
       const toggle = document.getElementById("toggleSonido");
       const slider = document.getElementById("sliderSonido");
       const circle = document.getElementById("sliderCircle");
@@ -804,7 +892,6 @@
       sonidoActivo = document.getElementById("toggleSonido").checked;
       const slider = document.getElementById("sliderSonido");
       const circle = document.getElementById("sliderCircle");
-      
       if (sonidoActivo) {
         slider.style.backgroundColor = "#34C759";
         circle.style.transform = "translateX(20px)";
@@ -812,7 +899,6 @@
         slider.style.backgroundColor = "#39393D";
         circle.style.transform = "translateX(0px)";
       }
-      
       guardarDatos();
     }
 
@@ -843,13 +929,11 @@
         alert("No hay movimientos para exportar");
         return;
       }
-
       let csv = "Fecha,Tipo,Categoría,Monto,Nota\n";
       movimientos.forEach(m => {
         const fecha = new Date(m.fecha).toLocaleDateString("es-CL");
         csv += `"${fecha}","${m.tipo}","${m.categoria}",${m.monto},"${m.nota || ""}"\n`;
       });
-
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -859,17 +943,122 @@
       URL.revokeObjectURL(url);
     }
 
+    // ========== GRÁFICO DE TORTA ==========
+    function abrirGrafico(tipo) {
+      const ahora = new Date();
+      let mes, año, titulo;
+
+      if (tipo === "actual") {
+        mes = ahora.getMonth();
+        año = ahora.getFullYear();
+        titulo = "Mes en curso";
+      } else {
+        const d = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+        mes = d.getMonth();
+        año = d.getFullYear();
+        titulo = "Mes anterior";
+      }
+
+      document.getElementById("tituloGrafico").textContent = titulo;
+
+      // Calcular gastos por categoría
+      const porCategoria = {};
+      let total = 0;
+
+      movimientos.forEach(m => {
+        const d = new Date(m.fecha);
+        if (d.getMonth() === mes && d.getFullYear() === año && m.tipo === "gasto") {
+          if (!porCategoria[m.categoria]) {
+            porCategoria[m.categoria] = { monto: 0, emoji: m.emoji };
+          }
+          porCategoria[m.categoria].monto += m.monto;
+          total += m.monto;
+        }
+      });
+
+      const datos = Object.entries(porCategoria)
+        .map(([nombre, info]) => ({
+          nombre,
+          emoji: info.emoji,
+          monto: info.monto,
+          pct: total > 0 ? (info.monto / total * 100) : 0
+        }))
+        .sort((a, b) => b.monto - a.monto);
+
+      document.getElementById("chartTotal").textContent = formatCLP(total);
+
+      // Dibujar torta
+      dibujarTorta(datos, total);
+
+      // Lista
+      const lista = document.getElementById("chartList");
+      if (datos.length === 0) {
+        lista.innerHTML = `<div class="empty">No hay gastos este mes</div>`;
+      } else {
+        lista.innerHTML = datos.map((d, i) => `
+          <div class="chart-item">
+            <div class="chart-color" style="background:${COLORES[i % COLORES.length]}"></div>
+            <div class="chart-name">${d.emoji} ${d.nombre}</div>
+            <div class="chart-monto">${formatCLP(d.monto)}</div>
+            <div class="chart-pct">${d.pct.toFixed(0)}%</div>
+          </div>
+        `).join("");
+      }
+
+      document.getElementById("modalGrafico").classList.add("active");
+    }
+
+    function cerrarGrafico() {
+      document.getElementById("modalGrafico").classList.remove("active");
+    }
+
+    function dibujarTorta(datos, total) {
+      const canvas = document.getElementById("pieCanvas");
+      const ctx = canvas.getContext("2d");
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const radius = 110;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (total === 0 || datos.length === 0) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fillStyle = "#2C2C2E";
+        ctx.fill();
+        return;
+      }
+
+      let startAngle = -Math.PI / 2;
+
+      datos.forEach((d, i) => {
+        const sliceAngle = (d.monto / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, startAngle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = COLORES[i % COLORES.length];
+        ctx.fill();
+        startAngle += sliceAngle;
+      });
+
+      // Círculo interior (donut)
+      ctx.beginPath();
+      ctx.arc(cx, cy, 55, 0, Math.PI * 2);
+      ctx.fillStyle = "#000000";
+      ctx.fill();
+    }
+
     function reproducirSonidoAppStore() {
       if (!sonidoActivo) return;
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const now = ctx.currentTime;
 
-        // Primer tono (más grave y corto)
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.type = "sine";
-        osc1.frequency.setValueAtTime(1046.5, now); // C6
+        osc1.frequency.setValueAtTime(1046.5, now);
         gain1.gain.setValueAtTime(0.0, now);
         gain1.gain.linearRampToValueAtTime(0.35, now + 0.01);
         gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
@@ -878,11 +1067,10 @@
         osc1.start(now);
         osc1.stop(now + 0.2);
 
-        // Segundo tono (más agudo y brillante) - el característico "ding"
         const osc2 = ctx.createOscillator();
         const gain2 = ctx.createGain();
         osc2.type = "sine";
-        osc2.frequency.setValueAtTime(1567.98, now + 0.06); // G6
+        osc2.frequency.setValueAtTime(1567.98, now + 0.06);
         gain2.gain.setValueAtTime(0.0, now + 0.06);
         gain2.gain.linearRampToValueAtTime(0.28, now + 0.07);
         gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
@@ -891,7 +1079,6 @@
         osc2.start(now + 0.06);
         osc2.stop(now + 0.35);
 
-        // Pequeño overtone para más brillo
         const osc3 = ctx.createOscillator();
         const gain3 = ctx.createGain();
         osc3.type = "triangle";
