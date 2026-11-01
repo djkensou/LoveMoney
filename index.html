@@ -446,6 +446,7 @@
     #pieCanvas {
       max-width: 280px;
       margin: 0 auto 24px;
+      cursor: pointer;
     }
 
     .chart-total {
@@ -579,7 +580,7 @@
     <input type="text" class="nota-input" id="notaInput" placeholder="Nota (opcional)" />
   </div>
 
-  <!-- Modal Ajustar (sin cambios) -->
+  <!-- Modal Ajustar -->
   <div class="modal" id="modalAjustar">
     <div class="modal-header">
       <button class="btn-cerrar" onclick="cerrarAjustar()">Cancelar</button>
@@ -619,15 +620,15 @@
     <div class="historial-lista" id="listaHistorial"></div>
   </div>
 
-  <!-- Modal Gráfico -->
+  <!-- Modal Gráfico (sin botón Inicio, se cierra tocando el gráfico) -->
   <div class="modal" id="modalGrafico">
     <div class="modal-header">
-      <button class="btn-cerrar" onclick="cerrarGrafico()">Inicio</button>
+      <div style="width:60px"></div>
       <h2 id="tituloGrafico">Mes en curso</h2>
       <div style="width:60px"></div>
     </div>
     <div class="chart-container">
-      <canvas id="pieCanvas" width="280" height="280"></canvas>
+      <canvas id="pieCanvas" width="280" height="280" onclick="cerrarGrafico()"></canvas>
       <div class="chart-total" id="chartTotal">$0</div>
       <div class="chart-list" id="chartList"></div>
     </div>
